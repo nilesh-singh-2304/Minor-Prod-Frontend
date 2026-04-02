@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Send, Plus, Trash2, Loader2 } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { executeRequest } from '../../features/executor'
 
 const methodColors = {
   GET: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
@@ -88,77 +89,27 @@ export function ApiTester() {
   const [responseHeaders, setResponseHeaders] = useState(null)
   const [responseTime, setResponseTime] = useState(null)
 
-  const sendRequest = async () => {
-    if (!url) return
+const sendRequest = async () => {
+  if (!url) return;
 
-    setLoading(true)
-    setResponse(null)
-    setResponseHeaders(null)
+  setLoading(true);
+  setResponse(null);
+  setResponseHeaders(null);
 
-    const startTime = performance.now()
+  const result = await executeRequest({
+    url,
+    method,
+    headers,
+    params,
+    body,
+  });
 
-    try {
-      // Build query string from params
-      const queryParams = params
-        .filter(p => p.key && p.enabled)
-        .map(p => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`)
-        .join('&')
-      
-      const fullUrl = queryParams ? `${url}?${queryParams}` : url
+  setResponse(result.response);
+  setResponseHeaders(result.headers);
+  setResponseTime(result.time);
 
-      // Build headers object
-      const headersObj = {}
-      headers.filter(h => h.key && h.enabled).forEach(h => {
-        headersObj[h.key] = h.value
-      })
-
-      const options = {
-        method,
-        headers: headersObj,
-      }
-
-      if (['POST', 'PUT', 'PATCH'].includes(method) && body.trim()) {
-        options.body = body
-      }
-
-      const res = await fetch(fullUrl, options)
-      const endTime = performance.now()
-      setResponseTime(Math.round(endTime - startTime))
-
-      // Get response headers
-      const resHeaders = {}
-      res.headers.forEach((value, key) => {
-        resHeaders[key] = value
-      })
-      setResponseHeaders(resHeaders)
-
-      // Try to parse as JSON, fallback to text
-      const contentType = res.headers.get('content-type')
-      let data
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json()
-      } else {
-        data = await res.text()
-      }
-
-      setResponse({
-        status: res.status,
-        statusText: res.statusText,
-        data,
-        ok: res.ok,
-      })
-    } catch (error) {
-      setResponse({
-        status: 0,
-        statusText: 'Error',
-        data: { error: error.message },
-        ok: false,
-      })
-      setResponseTime(Math.round(performance.now() - startTime))
-    } finally {
-      setLoading(false)
-    }
-  }
+  setLoading(false);
+};
 
   const getStatusColor = (status) => {
     if (status >= 200 && status < 300) return statusColors.success

@@ -7,6 +7,7 @@ import { Collections } from "../components/shared/Collections";
 import { Header } from "../components/shared/Header";
 import { RequestView } from "../components/shared/RequestView";
 import Home from "../pages/Home";
+import Login from "../components/shared/Login";
 
 const routes =  createBrowserRouter([
     {
@@ -22,11 +23,7 @@ const routes =  createBrowserRouter([
             {
                 path: "/login",
                 element: (
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <div>
-                            Login Pagee....
-                        </div>
-                    </Suspense>
+                    <Login/>
                 )
             }
            
