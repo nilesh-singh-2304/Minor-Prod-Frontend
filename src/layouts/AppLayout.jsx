@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sidebar, MobileSidebar } from "../components/shared/sidebar";
 import { Header } from "../components/shared/Header";
 import { Outlet, useLocation } from "react-router-dom";
@@ -11,6 +11,11 @@ export default function AppLayout() {
 
   const activeTabId = useWorkspaceStore((state) => state.activeTabId);
   const openTabs = useWorkspaceStore((state) => state.openTabs);
+  const fetchCollections = useWorkspaceStore((s) => s.fetchCollections);
+
+  useEffect(() => {
+    fetchCollections();
+  },[]);
 
   const getHeaderInfo = () => {
     // 🧠 If inside workspace and tab is open

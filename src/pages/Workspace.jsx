@@ -20,7 +20,7 @@ export default function Workspace() {
       <WorkspaceTabs
         tabs={openTabs}
         activeTabId={activeTabId}
-        onTabClick={switchTab}
+        onTabClick={switchTab} 
         onTabClose={closeTab}
       />
 

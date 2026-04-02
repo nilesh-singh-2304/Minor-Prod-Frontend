@@ -51,7 +51,7 @@ function CollectionItem({
     <div>
       <button
         onClick={() => onToggle(collection.id)}
-        className="w-full flex items-center gap-2 px-3 py-2 text-sm"
+        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded transition"
       >
         <ChevronRight
           className={cn("w-4 h-4", isExpanded && "rotate-90")}
@@ -67,11 +67,9 @@ function CollectionItem({
               key={req.id}
               onClick={() => onRequestClick(req, collection)}
               className={cn(
-                "flex gap-2 w-full text-xs p-2 rounded",
-                activeTabId === req.id
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-accent"
-              )}
+  "flex gap-2 w-full text-xs p-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition",
+  activeTabId === req.id && "bg-primary text-primary-foreground"
+)}
             >
               <MethodBadge method={req.method} />
               {req.name}
@@ -118,13 +116,13 @@ function SidebarContent() {
   return (
     <>
       <div className="p-4 border-b">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 font-mono">
           <Zap />
           Frontend API
         </div>
       </div>
 
-      <nav className="p-4">
+      <nav className="p-4 font-mono text-foreground">
         {navItems.map((item) => {
           const isActive =
             (item.id === "tester" && location.pathname === "/") ||
@@ -137,9 +135,9 @@ function SidebarContent() {
                 navigate(item.id === "tester" ? "/" : `/${item.id}`)
               }
               className={cn(
-                "block w-full text-left p-2 rounded",
-                isActive && "bg-primary text-white"
-              )}
+  "block w-full text-left p-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition",
+  isActive && "bg-primary text-primary-foreground"
+)}
             >
               {item.label}
             </button>
@@ -169,8 +167,8 @@ export function Sidebar() {
 
 export function MobileSidebar({ isOpen, onClose }) {
   return isOpen ? (
-    <div className="fixed inset-0 bg-black/40">
-      <div className="w-72 bg-white h-full">
+    <div className="fixed font-mono inset-0 bg-black/40">
+      <div className="w-72 bg-background h-full">
         <SidebarContent />
         <button onClick={onClose}>
           <X />
