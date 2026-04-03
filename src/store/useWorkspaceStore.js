@@ -10,72 +10,54 @@ export const useWorkspaceStore = create((set, get) => ({
   loading: false,
   error: null,
 
-  fetchCollections: async()=>{
-    if(get().collections.lenght > 0) return;
+  // 🔥 FETCH COLLECTIONS
+  fetchCollections: async () => {
+    if (get().collections.length > 0) return;
 
-    set({loading: true , error: null});
+    set({ loading: true, error: null });
+
     try {
-        const response = await fetch(GET_COLLECTIONS , {
-            method: "GET",
-            credentials: "include"
-        });
+      const response = await fetch(GET_COLLECTIONS, {
+        method: "GET",
+        credentials: "include",
+      });
 
-        const res = await response.json();
-        console.log(res);
-        
-        const data = res.data || [];
+      const res = await response.json();
 
-        const normalized = data.map((col) => ({
-            id: col._id,
-            name: col.name,
-            baseUrl: col.baseUrl,
+      const data = res.data || [];
 
-            requests: (col.requests || []).map((req) => ({
-                id: req._id,
-                name: req.name,
-                method: req.method,
-                url: req.url || "",
-                headers: mapToArray(req.headers),
-                params: mapToArray(req.queryParams),
-                body: normalizeBody(req.body),
-            }))
-        }));
+      console.log("response is : " , res);
+      
 
-        set({
-            collections: normalized,
-            loading: false,
-        });
+      const normalized = data.map((col) => ({
+        id: col._id,
+        name: col.name,
+        baseUrl: col.baseUrl,
 
+        requests: (col.requests || []).map((req) => ({
+          id: req._id,
+          name: req.name,
+          method: req.method,
+          url: req.url || "",
+          headers: mapToArray(req.headers),
+          params: mapToArray(req.queryParams),
+          body: normalizeBody(req.body),
+        })),
+      }));
+
+      set({
+        collections: normalized,
+        loading: false,
+      });
     } catch (err) {
-        set({
-            error: err.message,
-            loading: false,
-        })
+      set({
+        error: err.message,
+        loading: false,
+      });
     }
   },
 
-  // 🔥 NEW: collections as source of truth
-//   collections: [
-//     {
-//       id: "1",
-//       name: "User API",
-//       requests: [
-//         { id: "1-1", name: "Get All Users", method: "GET" },
-//         { id: "1-2", name: "Create User", method: "POST" },
-//         { id: "1-3", name: "Update User", method: "PUT" },
-//         { id: "1-4", name: "Delete User", method: "DELETE" },
-//       ],
-//     },
-//     {
-//       id: "2",
-//       name: "Products API",
-//       requests: [
-//         { id: "2-1", name: "List Products", method: "GET" },
-//         { id: "2-2", name: "Add Product", method: "POST" },
-//       ],
-//     },
-//   ],
-
+  // 🔥 OPEN TAB
   openRequestTab: (request, collection) => {
     const { openTabs } = get();
     const tabId = request.id;
@@ -105,12 +87,13 @@ export const useWorkspaceStore = create((set, get) => ({
           url: request.url || "",
           headers: request.headers || [],
           params: request.params || [],
-          body: request.body || "",
+          body: request.body || { mode: "json", content: "" },
         },
       },
     }));
   },
 
+  // 🔥 CLOSE TAB
   closeTab: (tabId) => {
     set((state) => {
       const newTabs = state.openTabs.filter((t) => t.id !== tabId);
@@ -133,10 +116,9 @@ export const useWorkspaceStore = create((set, get) => ({
 
   switchTab: (tabId) => set({ activeTabId: tabId }),
 
-  // 🔥 IMPORTANT: sync everywhere
+  // 🔥 UPDATE TAB DATA (SYNC EVERYWHERE)
   updateTabData: (tabId, updated) => {
     set((state) => ({
-      // update request view
       tabData: {
         ...state.tabData,
         [tabId]: {
@@ -145,7 +127,6 @@ export const useWorkspaceStore = create((set, get) => ({
         },
       },
 
-      // update tab header
       openTabs: state.openTabs.map((tab) =>
         tab.id === tabId
           ? {
@@ -156,7 +137,6 @@ export const useWorkspaceStore = create((set, get) => ({
           : tab
       ),
 
-      // 🔥 update sidebar collections
       collections: state.collections.map((collection) => ({
         ...collection,
         requests: collection.requests.map((req) =>
@@ -167,25 +147,25 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 }));
 
+// 🔧 HELPERS
 
-
-function mapToArray(obj = {}){
-    return Object.entries(obj || {}).map(([Key,value]) => ({
-        key,
-        value,
-        enabled: true,
-    }));
+function mapToArray(obj = {}) {
+  return Object.entries(obj || {}).map(([key, value]) => ({
+    key,
+    value,
+    enabled: true,
+  }));
 }
 
 function normalizeBody(body) {
-    if(!body) return {mode:"json" , content:""};
+  if (!body) return { mode: "json", content: "" };
 
-    if(typeof body == "string"){
-        return {mode: "raw" , content:body};
-    }
+  if (typeof body === "string") {
+    return { mode: "raw", content: body };
+  }
 
-    return{
-        mode: "json",
-        content: JSON.stringify(body , null , 2),
-    };
+  return {
+    mode: "json",
+    content: JSON.stringify(body, null, 2),
+  };
 }

@@ -24,7 +24,19 @@ import {
 } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { executeRequest } from "../../features/executor"
-
+import JsonView from '@uiw/react-json-view';
+import JsonViewEditor from '@uiw/react-json-view/editor';
+import { lightTheme } from '@uiw/react-json-view/light';
+import { darkTheme } from '@uiw/react-json-view/dark';
+import { TriangleArrow } from '@uiw/react-json-view/triangle-arrow';
+import { TriangleSolidArrow } from '@uiw/react-json-view/triangle-solid-arrow';
+import { nordTheme } from '@uiw/react-json-view/nord';
+import { githubLightTheme } from '@uiw/react-json-view/githubLight';
+import { githubDarkTheme } from '@uiw/react-json-view/githubDark';
+import { vscodeTheme } from '@uiw/react-json-view/vscode';
+import { gruvboxTheme } from '@uiw/react-json-view/gruvbox';
+import { monokaiTheme } from '@uiw/react-json-view/monokai';
+import { basicTheme } from '@uiw/react-json-view/basic';
 
 const methodColors = {
   GET: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
@@ -146,6 +158,8 @@ function ResponseViewer({ response, responseHeaders, responseTime }) {
     return response.data
   }
 
+  const finalData = response.data;
+
   const getResponseSize = () => {
     const text = typeof response.data === 'object' 
       ? JSON.stringify(response.data) 
@@ -231,13 +245,10 @@ function ResponseViewer({ response, responseHeaders, responseTime }) {
         </div>
 
         <TabsContent value="body" className="flex-1 mt-3 sm:mt-4 min-h-0">
-          <pre className={cn(
-            "h-80 p-3 w-full sm:p-4 bg-muted/30 border border-border rounded-lg overflow-y-scroll overflow-x-hidden font-mono text-xs sm:text-sm leading-relaxed",
-            viewMode === 'raw' && "whitespace-pre-wrap break-all"
-          )}>
-            <code>{formatResponseData()}</code>
-          </pre>
-        </TabsContent>
+  <div className="h-80 overflow-auto rounded-xl border border-border">
+    <JsonView value={response.data} style={nordTheme} />
+  </div>
+</TabsContent>
 
         <TabsContent value="headers" className="flex-1 mt-3 sm:mt-4 min-h-0">
           <div className="h-full overflow-auto">

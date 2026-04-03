@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState , useEffect } from "react"
 import { Button } from "../ui/button"
 import { Card, CardContent } from "../ui/card"
 import { Input } from "../ui/input"
@@ -20,6 +20,7 @@ import {
 } from "../ui/select"
 import { Plus, FolderOpen, ArrowLeft, Globe, Send } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { useWorkspaceStore } from "../../store/useWorkspaceStore";
 
 
 const initialCollections = [
@@ -332,60 +333,56 @@ function CollectionDetail({ collection, onBack, onSelectRequest, onAddRequest })
 }
 
 export function Collections({ onOpenRequest }) {
-  const [collections, setCollections] = useState(initialCollections)
-  const [selectedCollection, setSelectedCollection] = useState(null)
+  const collections = useWorkspaceStore((s) => s.collections);
+  const fetchCollections = useWorkspaceStore((s) => s.fetchCollections);
+  const openRequestTab = useWorkspaceStore((s) => s.openRequestTab);
+  const loading = useWorkspaceStore((s) => s.loading);
 
-  const handleCreateCollection = (newCollection) => {
-    setCollections([...collections, newCollection])
-  }
+  const [selectedCollection, setSelectedCollection] = useState(null);
 
-  const handleAddRequest = (newRequest) => {
-    if (selectedCollection) {
-      const updatedCollection = {
-        ...selectedCollection,
-        requests: [...selectedCollection.requests, newRequest]
-      }
-      setCollections(collections.map(c => 
-        c.id === selectedCollection.id ? updatedCollection : c
-      ))
-      setSelectedCollection(updatedCollection)
-    }
-  }
+  useEffect(() => {
+    fetchCollections();
+  }, []);
 
   const handleSelectRequest = (request) => {
+    openRequestTab(request, selectedCollection);
+
     if (onOpenRequest) {
-      // Use tab-based workflow - open in a new tab
-      onOpenRequest(
-        { 
-          ...request, 
-          id: `${selectedCollection.id}-${request.id}`,
-          url: `${selectedCollection.baseUrl}/${request.name.toLowerCase().replace(/\s+/g, '-')}` 
-        }, 
-        selectedCollection
-      )
+      onOpenRequest(request, selectedCollection);
     }
+  };
+
+  // 🔥 LOADING UI
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        Loading collections...
+      </div>
+    );
   }
 
+  // 🔥 DETAIL VIEW
   if (selectedCollection) {
     return (
       <div className="flex-1 overflow-auto">
-        <CollectionDetail 
-          collection={selectedCollection} 
+        <CollectionDetail
+          collection={selectedCollection}
           onBack={() => setSelectedCollection(null)}
           onSelectRequest={handleSelectRequest}
-          onAddRequest={handleAddRequest}
+          onAddRequest={() => {}}
         />
       </div>
-    )
+    );
   }
 
+  // 🔥 LIST VIEW
   return (
     <div className="flex-1 overflow-auto">
-      <CollectionsList 
+      <CollectionsList
         collections={collections}
         onSelectCollection={setSelectedCollection}
-        onCreateCollection={handleCreateCollection}
+        onCreateCollection={() => {}}
       />
     </div>
-  )
+  );
 }
