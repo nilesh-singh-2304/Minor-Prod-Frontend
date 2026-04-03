@@ -101,6 +101,7 @@ export const useWorkspaceStore = create((set, get) => ({
         ...state.tabData,
         [tabId]: {
           ...request,
+          baseUrl: collection?.baseUrl || "",
           url: request.url || "",
           headers: request.headers || [],
           params: request.params || [],
