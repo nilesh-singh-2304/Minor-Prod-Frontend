@@ -23,6 +23,7 @@ import {
   AlignLeft,
 } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { executeRequest } from "../../features/executor"
 
 
 const methodColors = {
@@ -231,7 +232,7 @@ function ResponseViewer({ response, responseHeaders, responseTime }) {
 
         <TabsContent value="body" className="flex-1 mt-3 sm:mt-4 min-h-0">
           <pre className={cn(
-            "h-full p-3 sm:p-4 bg-muted/30 border border-border rounded-lg overflow-auto font-mono text-xs sm:text-sm leading-relaxed",
+            "h-80 p-3 w-full sm:p-4 bg-muted/30 border border-border rounded-lg overflow-y-scroll overflow-x-hidden font-mono text-xs sm:text-sm leading-relaxed",
             viewMode === 'raw' && "whitespace-pre-wrap break-all"
           )}>
             <code>{formatResponseData()}</code>
@@ -265,6 +266,7 @@ export function RequestView({ request, onSave, onBack }) {
   const [requestName, setRequestName] = useState(request?.name || 'New Request')
   const [method, setMethod] = useState(request?.method || 'GET')
   const [url, setUrl] = useState(request?.url || '')
+  const [baseUrl , setBaseUrl] = useState(request?.baseUrl || "");
   const [headers, setHeaders] = useState(request?.headers || [
     { key: 'Content-Type', value: 'application/json', enabled: true }
   ])
@@ -280,74 +282,32 @@ export function RequestView({ request, onSave, onBack }) {
     if (!hasChanges) setHasChanges(true)
   }
 
-  const sendRequest = async () => {
-    if (!url) return
+ const sendRequest = async () => {
+   if (!url) return;
 
-    setLoading(true)
-    setResponse(null)
-    setResponseHeaders(null)
-
-    const startTime = performance.now()
-
-    try {
-      const queryParams = params
-        .filter(p => p.key && p.enabled)
-        .map(p => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`)
-        .join('&')
-      
-      const fullUrl = queryParams ? `${url}?${queryParams}` : url
-
-      const headersObj = {}
-      headers.filter(h => h.key && h.enabled).forEach(h => {
-        headersObj[h.key] = h.value
-      })
-
-      const options = {
-        method,
-        headers: headersObj,
-      }
-
-      if (['POST', 'PUT', 'PATCH'].includes(method) && body.trim()) {
-        options.body = body
-      }
-
-      const res = await fetch(fullUrl, options)
-      const endTime = performance.now()
-      setResponseTime(Math.round(endTime - startTime))
-
-      const resHeaders = {}
-      res.headers.forEach((value, key) => {
-        resHeaders[key] = value
-      })
-      setResponseHeaders(resHeaders)
-
-      const contentType = res.headers.get('content-type')
-      let data
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json()
-      } else {
-        data = await res.text()
-      }
-
-      setResponse({
-        status: res.status,
-        statusText: res.statusText,
-        data,
-        ok: res.ok,
-      })
-    } catch (error) {
-      setResponse({
-        status: 0,
-        statusText: 'Error',
-        data: { error: error.message },
-        ok: false,
-      })
-      setResponseTime(Math.round(performance.now() - startTime))
-    } finally {
-      setLoading(false)
-    }
-  }
-
+   console.log("base url is : " , baseUrl);
+   
+ 
+   setLoading(true);
+   setResponse(null);
+   setResponseHeaders(null);
+   const fullUrl = baseUrl+url;
+ 
+   const result = await executeRequest({
+     url: fullUrl,
+     method,
+     headers,
+     params,
+     body,
+   });
+ 
+   setResponse(result.response);
+   setResponseHeaders(result.headers);
+   setResponseTime(result.time);
+ 
+   setLoading(false);
+ };
+ 
   const handleSave = () => {
     if (onSave) {
       onSave({
@@ -405,13 +365,22 @@ export function RequestView({ request, onSave, onBack }) {
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              placeholder="Enter request URL"
-              value={url}
-              onChange={(e) => { setUrl(e.target.value); markChanged() }}
-              className="flex-1 font-mono text-sm"
-              onKeyDown={(e) => e.key === 'Enter' && sendRequest()}
-            />
+            <div className="flex items-center border w-full rounded px-2">
+  <span className="text-gray-500 text-sm">
+    {"{base}"}
+  </span>
+
+  <Input
+    placeholder="Enter Request URL"
+    value={url}
+    onChange={(e) => {
+      setUrl(e.target.value);
+      markChanged();
+    }}
+    className="flex-1 font-mono text-sm border-none focus:ring-0"
+    onKeyDown={(e) => e.key === "Enter" && sendRequest()}
+  />
+</div>
             <Button 
               onClick={sendRequest} 
               disabled={loading || !url}
