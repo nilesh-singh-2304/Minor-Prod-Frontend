@@ -3,6 +3,7 @@ import { Sidebar, MobileSidebar } from "../components/shared/sidebar";
 import { Header } from "../components/shared/Header";
 import { Outlet, useLocation } from "react-router-dom";
 import { useWorkspaceStore } from "../store/useWorkspaceStore";
+import { Toaster } from "react-hot-toast";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,6 +50,9 @@ export default function AppLayout() {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop Sidebar */}
+      
+
+<Toaster position="top-right" reverseOrder={false} />
       <div className="hidden lg:block">
         <Sidebar />
       </div>

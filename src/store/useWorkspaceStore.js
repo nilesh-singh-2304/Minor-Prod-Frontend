@@ -145,6 +145,49 @@ export const useWorkspaceStore = create((set, get) => ({
       })),
     }));
   },
+
+  addCollection: ({id , name , baseUrl}) => {
+    console.log("id is : " , id);
+    console.log("name is : " , name);
+    console.log("baseurl is : " , baseUrl);
+    
+    
+    
+    const newCollection = {
+      id: id,
+      name: name,
+      baseUrl: baseUrl,
+      requests: [],
+    }
+
+    set((state) => ({
+        collections: [...state.collections, newCollection]
+      }))
+  },
+
+  addRequest: ({collId , id , name , url , method}) => {
+    set((state) => ({
+      collections: state.collections.map((collection) => {
+        if(collection.id != collId) return collection;
+
+        return {
+          ...collection,
+          requests: [
+            ...collection.requests,
+            {
+              id: id,
+              name: name,
+              method: method,
+              url: url,
+              headers: [],
+              params: [],
+              body: { mode: "json", content: "" },
+            }
+          ]
+        }
+      })
+    }))
+  },
 }));
 
 // 🔧 HELPERS
