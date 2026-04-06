@@ -282,7 +282,7 @@ export function RequestView({ request, onSave, onBack }) {
     { key: 'Content-Type', value: 'application/json', enabled: true }
   ])
   const [params, setParams] = useState(request?.params || [])
-  const [body, setBody] = useState(request?.body || '{\n  \n}')
+  const [body, setBody] = useState('{\n  \n}')
   const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState(null)
   const [responseHeaders, setResponseHeaders] = useState(null)

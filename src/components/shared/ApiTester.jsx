@@ -14,6 +14,8 @@ import { Badge } from '../ui/badge'
 import { Send, Plus, Trash2, Loader2 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { executeRequest } from '../../features/executor'
+import JsonView from '@uiw/react-json-view'
+import { nordTheme } from '@uiw/react-json-view/nord'
 
 const methodColors = {
   GET: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
@@ -239,11 +241,9 @@ const sendRequest = async () => {
                 <TabsTrigger value="headers" className="text-xs sm:text-sm">Headers</TabsTrigger>
               </TabsList>
               <TabsContent value="response" className="flex-1 mt-3 sm:mt-4 min-h-0">
-                <pre className="h-full p-3 sm:p-4 bg-muted/50 rounded-lg overflow-auto font-mono text-xs sm:text-sm break-words whitespace-pre-wrap">
-                  {typeof response.data === 'object'
-                    ? JSON.stringify(response.data, null, 2)
-                    : response.data}
-                </pre>
+                <div className="h-80 overflow-auto rounded-xl border border-border">
+    <JsonView value={response.data} style={nordTheme} />
+  </div>
               </TabsContent>
               <TabsContent value="headers" className="flex-1 mt-3 sm:mt-4 min-h-0">
                 <pre className="h-full p-3 sm:p-4 bg-muted/50 rounded-lg overflow-auto font-mono text-xs sm:text-sm break-words whitespace-pre-wrap">

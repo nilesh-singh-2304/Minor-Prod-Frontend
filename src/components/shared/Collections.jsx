@@ -21,6 +21,10 @@ import {
 import { Plus, FolderOpen, ArrowLeft, Globe, Send } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { useWorkspaceStore } from "../../store/useWorkspaceStore";
+import useAddCollection from "../../hooks/addCollectionHook"
+import useAddRequest from "../../hooks/addRequestHook"
+import useAddMembers from "../../hooks/addMemberHook"
+import {toastError, toastSuccess } from "../../utils/toasts"
 
 
 const initialCollections = [
@@ -75,21 +79,38 @@ function MethodBadge({ method }) {
   )
 }
 
-function AddRequestDialog({ onAddRequest }) {
+function AddRequestDialog({ onAddRequest , collectionId }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [method, setMethod] = useState('GET')
+  const [url, seturl] = useState("")
+  const {loading , error , addRequest} = useAddRequest();
 
-  const handleCreate = () => {
-    if (name.trim()) {
-      onAddRequest({
-        id: Date.now().toString(),
+  const handleCreate = async() => {
+    if (name.trim() && url.trim()) {
+      const res = await addRequest({name , url , method , collectionId});
+      console.log("response for create request is : " , res);
+
+      if(res){
+        toastSuccess("Request Created");
+        onAddRequest({
+        collId: collectionId,
+        id: res?.data?._id,
         name: name.trim(),
+        url: url ,
         method,
       })
       setName('')
       setMethod('GET')
       setOpen(false)
+      }
+      else{
+        toastError(res.message)
+      }
+      
+    }
+    else{
+      toastError("All fields required")
     }
   }
 
@@ -116,6 +137,15 @@ function AddRequestDialog({ onAddRequest }) {
               placeholder="Get User by ID" 
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="min-h-[44px] sm:min-h-0"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Request Url</label>
+            <Input 
+              placeholder="/api/v1" 
+              value={url}
+              onChange={(e) => seturl(e.target.value)}
               className="min-h-[44px] sm:min-h-0"
             />
           </div>
@@ -148,22 +178,112 @@ function AddRequestDialog({ onAddRequest }) {
   )
 }
 
+function AddmembersDialog({collectionId }) {
+  const [open, setOpen] = useState(false)
+  const [email, setemail] = useState('')
+  const [role, setrole] = useState('viewer')
+  const {loading , error , addMember} = useAddMembers();
+
+  const handleAddMember = async() => {
+      if(email.trim()){
+        const res = await addMember({email , role , collId: collectionId})
+      if(res.success){
+        console.log(res);
+        toastSuccess(res.message)
+        setemail('');
+        setrole('viewer')
+        setOpen(false)
+      }
+      else{
+        toastError(res.message)
+      }
+      }
+      else{
+        toastError(res.message)
+      }
+    }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="min-h-[36px] sm:min-h-0">
+          <Plus className="w-4 h-4 mr-1.5" />
+          <span className="hidden sm:inline">Add members</span>
+          <span className="sm:hidden">Add</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md mx-4 sm:mx-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Request</DialogTitle>
+          <DialogDescription>
+            Collaborate with your teammates in the collection
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Member Email</label>
+            <Input 
+              placeholder="team@team.com" 
+              value={email}
+              onChange={(e) => setemail(e.target.value)}
+              className="min-h-[44px] sm:min-h-0"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">HTTP Method</label>
+            <Select value={role} onValueChange={setrole}>
+              <SelectTrigger className="min-h-[44px] sm:min-h-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="editor">EDITOR</SelectItem>
+                <SelectItem value="viewer">VIEWER</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)} className="min-h-[44px] sm:min-h-0 w-full sm:w-auto">
+            Cancel
+          </Button>
+          <Button onClick={handleAddMember} className="min-h-[44px] sm:min-h-0 w-full sm:w-auto">
+            Add Member
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function CreateCollectionDialog({ onCreateCollection }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
+  const {loading , success , error , addCollection} = useAddCollection();
 
-  const handleCreate = () => {
-    if (name.trim()) {
-      onCreateCollection({
-        id: Date.now().toString(),
-        name: name.trim(),
-        baseUrl: baseUrl.trim() || 'https://api.example.com',
+  const handleCreate = async() => {
+    if (name.trim() && baseUrl.trim()) {
+      const res = await addCollection({name , baseUrl});
+      console.log(res);
+
+      if(res.success){
+        toastSuccess("Collection Created")
+        onCreateCollection({
+        id: res?.data?._id,
+        name: name,
+        baseUrl: baseUrl || 'https://api.example.com',
         requests: []
       })
       setName('')
       setBaseUrl('')
       setOpen(false)
+      }
+      else{
+        toastError("Can't create Collection")
+      }
+    }
+    else{
+      toastError("All fields are required")
     }
   }
 
@@ -274,6 +394,7 @@ function CollectionsList({ collections, onSelectCollection, onCreateCollection }
 }
 
 function CollectionDetail({ collection, onBack, onSelectRequest, onAddRequest }) {
+  const addRequest = useWorkspaceStore((s) => s.addRequest);
   return (
     <div className="p-4 sm:p-6">
       {/* Header */}
@@ -305,7 +426,8 @@ function CollectionDetail({ collection, onBack, onSelectRequest, onAddRequest })
           <h3 className="text-sm font-medium text-foreground">
             Requests ({collection.requests.length})
           </h3>
-          <AddRequestDialog onAddRequest={onAddRequest} />
+          <AddmembersDialog collectionId={collection.id} />
+          <AddRequestDialog onAddRequest={onAddRequest} collectionId={collection.id} />
         </div>
 
         {collection.requests.length === 0 ? (
@@ -337,8 +459,14 @@ export function Collections({ onOpenRequest }) {
   const fetchCollections = useWorkspaceStore((s) => s.fetchCollections);
   const openRequestTab = useWorkspaceStore((s) => s.openRequestTab);
   const loading = useWorkspaceStore((s) => s.loading);
+  const addCollection = useWorkspaceStore((s) => s.addCollection);
+  const addRequest = useWorkspaceStore((s) => s.addRequest);
 
-  const [selectedCollection, setSelectedCollection] = useState(null);
+  const [selectedCollectionId, setSelectedCollectionId] = useState(null);
+
+  const selectedCollection = collections.find(
+    (col) => col.id === selectedCollectionId
+  );
 
   useEffect(() => {
     fetchCollections();
@@ -352,7 +480,6 @@ export function Collections({ onOpenRequest }) {
     }
   };
 
-  // 🔥 LOADING UI
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -361,27 +488,25 @@ export function Collections({ onOpenRequest }) {
     );
   }
 
-  // 🔥 DETAIL VIEW
   if (selectedCollection) {
     return (
       <div className="flex-1 overflow-auto">
         <CollectionDetail
           collection={selectedCollection}
-          onBack={() => setSelectedCollection(null)}
+          onBack={() => setSelectedCollectionId(null)}
           onSelectRequest={handleSelectRequest}
-          onAddRequest={() => {}}
+          onAddRequest={addRequest}
         />
       </div>
     );
   }
 
-  // 🔥 LIST VIEW
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 h-dvh overflow-scroll">
       <CollectionsList
         collections={collections}
-        onSelectCollection={setSelectedCollection}
-        onCreateCollection={() => {}}
+        onSelectCollection={(col) => setSelectedCollectionId(col.id)}
+        onCreateCollection={addCollection}
       />
     </div>
   );
