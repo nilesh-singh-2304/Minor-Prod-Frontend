@@ -245,7 +245,7 @@ function ResponseViewer({ response, responseHeaders, responseTime }) {
         </div>
 
         <TabsContent value="body" className="flex-1 mt-3 sm:mt-4 min-h-0">
-  <div className="h-80 overflow-auto rounded-xl border border-border">
+  <div className="h-[65vh] overflow-auto rounded-xl border border-border">
     <JsonView value={response.data} style={nordTheme} />
   </div>
 </TabsContent>
@@ -471,7 +471,18 @@ export function RequestView({ request, onSave, onBack }) {
                 </div>
                 <textarea
                   value={body}
-                  onChange={(e) => { setBody(e.target.value); markChanged() }}
+                  onChange={(e) => {
+  const value = e.target.value;
+
+  try {
+    const formatted = JSON.stringify(JSON.parse(value), null, 2);
+    setBody(formatted);
+  } catch {
+    setBody(value); // allow typing incomplete JSON
+  }
+
+  markChanged();
+}}
                   placeholder='{\n  "key": "value"\n}'
                   className="flex-1 w-full p-3 sm:p-4 font-mono text-sm bg-muted/30 border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-ring min-h-[120px]"
                 />

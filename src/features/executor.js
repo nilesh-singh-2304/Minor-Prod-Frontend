@@ -36,6 +36,9 @@ export const executeRequest = async({
             options.body = body;
         }
 
+        console.log("request body is : ", options.body);
+        
+
         const res = await fetch(fullUrl , options);
 
         const endTime = performance.now();

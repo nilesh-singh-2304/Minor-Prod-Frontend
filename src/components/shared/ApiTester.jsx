@@ -241,7 +241,7 @@ const sendRequest = async () => {
                 <TabsTrigger value="headers" className="text-xs sm:text-sm">Headers</TabsTrigger>
               </TabsList>
               <TabsContent value="response" className="flex-1 mt-3 sm:mt-4 min-h-0">
-                <div className="h-80 overflow-auto rounded-xl border border-border">
+                <div className="h-[65vh] overflow-auto rounded-xl border border-border">
     <JsonView value={response.data} style={nordTheme} />
   </div>
               </TabsContent>
